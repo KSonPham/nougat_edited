@@ -26,7 +26,7 @@ from tqdm import tqdm
 
 SAVE_DIR = Path("./pdfs")
 BATCHSIZE = int(os.environ.get("NOUGAT_BATCHSIZE", default_batch_size()))
-NOUGAT_CHECKPOINT = get_checkpoint()
+NOUGAT_CHECKPOINT = get_checkpoint("0.1.0-base")
 if NOUGAT_CHECKPOINT is None:
     print(
         "Set environment variable 'NOUGAT_CHECKPOINT' with a path to the model checkpoint!"
@@ -68,6 +68,18 @@ def root():
     }
     return response
 
+@app.get("/model_version/")
+def get_model_version():
+    """
+    Endpoint to retrieve the model version.
+
+    Returns:
+        dict: A dictionary containing the model version.
+    """
+    global model
+    if model is None:
+        return {"error": "Model not loaded"}
+    return {"model_version": model.config}
 
 @app.post("/predict/")
 async def predict(
@@ -166,7 +178,7 @@ async def predict(
 def main():
     import uvicorn
 
-    uvicorn.run("app:app", port=8503)
+    uvicorn.run("app:app",  reload=True, port=8503)
 
 
 if __name__ == "__main__":
