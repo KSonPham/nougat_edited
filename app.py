@@ -26,7 +26,7 @@ from tqdm import tqdm
 
 SAVE_DIR = Path("./pdfs")
 BATCHSIZE = int(os.environ.get("NOUGAT_BATCHSIZE", default_batch_size()))
-NOUGAT_CHECKPOINT = get_checkpoint("0.1.0-base")
+NOUGAT_CHECKPOINT = get_checkpoint(model_tag="0.1.0-base")
 if NOUGAT_CHECKPOINT is None:
     print(
         "Set environment variable 'NOUGAT_CHECKPOINT' with a path to the model checkpoint!"
