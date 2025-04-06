@@ -22,7 +22,7 @@ from nougat.utils.checkpoint import get_checkpoint
 from nougat.dataset.rasterize import rasterize_paper
 from nougat.utils.device import move_to_device, default_batch_size
 from tqdm import tqdm
-
+import re
 
 SAVE_DIR = Path("./pdfs")
 BATCHSIZE = int(os.environ.get("NOUGAT_BATCHSIZE", default_batch_size()))
@@ -84,7 +84,7 @@ def get_model_version():
 @app.post("/predict/")
 async def predict(
     file: UploadFile = File(...), start: int = None, stop: int = None
-) -> str:
+) -> dict:
     """
     Perform predictions on a PDF document and return the extracted text in Markdown format.
 
@@ -172,7 +172,21 @@ async def predict(
         )
     final = "".join(predictions).strip()
     (save_path / "doc.mmd").write_text(final, encoding="utf-8")
-    return final
+    # Create dictionary mapping page numbers to line ranges
+    page_line_ranges = {}
+    line_count = 0
+    def clean_newlines(text: str) -> str:
+        # Replace 2+ consecutive newlines with single newline
+        return re.sub(r'\n+', '\n', text).strip()
+    
+    for idx, page_content in enumerate(predictions):
+        num_lines = len(clean_newlines(page_content).splitlines())
+        page_line_ranges[idx + 1] = (line_count, line_count + num_lines)
+        line_count += num_lines
+    return {
+        'content': final,
+        'page_ranges': page_line_ranges
+    }
 
 
 def main():
